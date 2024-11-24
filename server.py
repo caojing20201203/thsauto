@@ -1,9 +1,12 @@
 import functools
 from flask import Flask, request, jsonify
+
+from test import run_client
 from thsauto import ThsAuto
 import time
 import sys
 import threading
+import subprocess
 
 import os
 
@@ -11,10 +14,18 @@ app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 
 auto = ThsAuto()
+auto.bind_client()
+if auto.hwnd_main:
+    run_client()
+    auto.bind_client()
 
-client_path = None
+client_path = 'c:\\tdx_chan\\ths\\xiadan.exe'
 def run_client():
-    os.system('start ' + client_path)
+    process = subprocess.Popen(client_path)
+    status = process.poll()
+    if status is not None:
+        print('client exit with status {}'.format(status))
+        sys.exit(status)
     
 
 lock = threading.Lock()
@@ -163,6 +174,6 @@ if __name__ == '__main__':
     if len(sys.argv) > 3:
         client_path = sys.argv[3]
     auto.bind_client()
-    if auto.hwnd_main is None and client_path is not None:
+    if auto.hwnd is None and client_path is not None:
         restart_client()
-    app.run(host=host, port=port)
+    #app.run(host=host, port=port, debug=True)
